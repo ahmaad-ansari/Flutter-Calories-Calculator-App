@@ -1,10 +1,11 @@
+// Importing necessary packages and files
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_calories_calculator/view_meal_plan_page.dart';
 import 'database_helper.dart';
 import 'package:intl/intl.dart';
 
-
+// Creating a StatefulWidget for creating meal plans
 class CreateMealPlanPage extends StatefulWidget {
   const CreateMealPlanPage({super.key});
 
@@ -13,7 +14,9 @@ class CreateMealPlanPage extends StatefulWidget {
   _CreateMealPlanPageState createState() => _CreateMealPlanPageState();
 }
 
+// State class for the CreateMealPlanPage
 class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
+  // Controllers, variables, and instances required for the page
   final _targetCaloriesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   final List<Map<String, dynamic>> _selectedFoodItems = [];
@@ -26,6 +29,7 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
     _loadFoodItems();
   }
 
+  // Loading available food items from the database
   Future<void> _loadFoodItems() async {
     List<Map<String, dynamic>> fetchedData = await _databaseHelper.getFoodCalories();
     setState(() {
@@ -36,6 +40,7 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
     });
   }
 
+  // Function to select a date using a date picker
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -50,12 +55,14 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
     }
   }
 
+  // Calculating remaining calories based on selected food items and target calories
   int get _remainingCalories {
     int targetCalories = int.tryParse(_targetCaloriesController.text) ?? 0;
     int currentCalories = _selectedFoodItems.fold(0, (sum, el) => sum + (el['calories'] as int));
     return targetCalories - currentCalories;
   }
 
+  // Toggling selection of food items
   void _toggleFoodItem(Map<String, dynamic> item) {
     setState(() {
       item['isSelected'] = !item['isSelected'];
@@ -67,6 +74,7 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
     });
   }
 
+  // Clearing all selections
   void _clearSelection() {
     setState(() {
       _selectedFoodItems.clear();
@@ -78,6 +86,7 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Building the UI for creating a meal plan
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Meal Plan'),
@@ -86,6 +95,7 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Text form field for target calories input
             TextFormField(
               controller: _targetCaloriesController,
               decoration: const InputDecoration(
@@ -94,6 +104,7 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
               keyboardType: TextInputType.number,
               onChanged: (value) => setState(() {}),
             ),
+            // Displaying selected date and allowing date selection
             const SizedBox(height: 20),
             Row(
               children: [
@@ -106,8 +117,10 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
               ],
             ),
             const SizedBox(height: 10),
+            // Displaying remaining calories
             Text('Remaining Calories: $_remainingCalories'),
             const SizedBox(height: 20),
+            // Displaying available food items with checkboxes
             Expanded(
               child: ListView.builder(
                 itemCount: _availableFoodItems.length,
@@ -125,11 +138,13 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
               ),
             ),
             const SizedBox(height: 10),
+            // Button to clear all selections
             ElevatedButton(
               onPressed: _clearSelection,
               child: const Text('Clear Selection'),
             ),
             const SizedBox(height: 20),
+            // Button to save the meal plan
             ElevatedButton(
               onPressed:  () {
                 _saveMealPlan(context);
@@ -142,24 +157,25 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
     );
   }
 
+  // Function to save the meal plan
   void _saveMealPlan(BuildContext context) async {
     if (_selectedFoodItems.isNotEmpty && _remainingCalories >= 0) {
       String foodItemsJson = jsonEncode(_selectedFoodItems);
       await _databaseHelper.addMealPlan(_selectedDate, int.parse(_targetCaloriesController.text), foodItemsJson);
       
-      // Navigate to another page
+      // Navigating to another page after saving the meal plan
       // ignore: use_build_context_synchronously
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const ViewMealPlanPage()),
       );
     } else {
+      // Showing a snack bar message if the meal plan is not valid
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please adjust your meal plan.")),
       );
     }
   }
-
 
   @override
   void dispose() {

@@ -1,8 +1,10 @@
+// Import necessary packages and files
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'update_meal_plan_page.dart';
 import 'database_helper.dart';
 
+// Widget for viewing meal plans
 class ViewMealPlanPage extends StatefulWidget {
   const ViewMealPlanPage({Key? key}) : super(key: key);
 
@@ -12,17 +14,18 @@ class ViewMealPlanPage extends StatefulWidget {
 
 class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  late List<Map<String, dynamic>> _mealPlans;
-  late TextEditingController _searchController;
+  late List<Map<String, dynamic>> _mealPlans; // List to store meal plans
+  late TextEditingController _searchController; // Controller for search input
 
   @override
   void initState() {
     super.initState();
     _mealPlans = [];
-    _loadMealPlans();
+    _loadMealPlans(); // Load meal plans from the database
     _searchController = TextEditingController();
   }
 
+  // Fetch meal plans from the database
   Future<void> _loadMealPlans() async {
     List<Map<String, dynamic>> fetchedData = await _databaseHelper.getMealPlans();
     setState(() {
@@ -30,11 +33,13 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
     });
   }
 
+  // Delete a meal plan by ID
   void _deleteMealPlan(int id) async {
     await _databaseHelper.deleteMealPlan(id);
     _loadMealPlans();
   }
 
+  // Navigate to update meal plan page
   void _navigateToUpdateMealPlanPage(Map<String, dynamic> mealPlan) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -45,6 +50,7 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
     });
   }
 
+  // Filter meal plans by date
   void _filterByDate(String query) {
     List<Map<String, dynamic>> filteredPlans = _mealPlans.where((plan) {
       String formattedDate = plan['date'] != null ? DateTime.parse(plan['date']).toString().split(' ')[0] : '';
@@ -67,7 +73,7 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: MealPlanSearch(_mealPlans, _filterByDate),
+                delegate: MealPlanSearch(_mealPlans, _filterByDate), // Implement search functionality
               );
             },
           ),
@@ -89,11 +95,11 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit),
-                    onPressed: () => _navigateToUpdateMealPlanPage(mealPlan),
+                    onPressed: () => _navigateToUpdateMealPlanPage(mealPlan), // Navigate to update meal plan page
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () => _deleteMealPlan(mealPlan['id']),
+                    onPressed: () => _deleteMealPlan(mealPlan['id']), // Delete meal plan
                   ),
                 ],
               ),
@@ -128,6 +134,7 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
   }
 }
 
+// Class for searching meal plans
 class MealPlanSearch extends SearchDelegate<String> {
   final List<Map<String, dynamic>> mealPlans;
   final Function(String) filterCallback;
@@ -210,5 +217,4 @@ class MealPlanSearch extends SearchDelegate<String> {
       },
     );
   }
-
 }

@@ -1,10 +1,12 @@
+// Import necessary packages and files
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'package:intl/intl.dart';
 
+// Widget for updating an existing meal plan
 class UpdateMealPlanPage extends StatefulWidget {
-  final Map<String, dynamic> mealPlan;
+  final Map<String, dynamic> mealPlan; // Meal plan data to be updated
 
   const UpdateMealPlanPage({Key? key, required this.mealPlan}) : super(key: key);
 
@@ -13,29 +15,33 @@ class UpdateMealPlanPage extends StatefulWidget {
 }
 
 class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
-  late TextEditingController _targetCaloriesController;
-  late DateTime _selectedDate;
-  List<Map<String, dynamic>> _selectedFoodItems = [];
-  List<Map<String, dynamic>> _availableFoodItems = [];
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  late TextEditingController _targetCaloriesController; // Controller for target calories input
+  late DateTime _selectedDate; // Variable to store the selected date
+  List<Map<String, dynamic>> _selectedFoodItems = []; // List to store selected food items
+  List<Map<String, dynamic>> _availableFoodItems = []; // List to store available food items
+  final DatabaseHelper _databaseHelper = DatabaseHelper(); // Database helper instance
 
   @override
   void initState() {
     super.initState();
+    // Initialize controllers and selected date from meal plan data
     _targetCaloriesController = TextEditingController(text: widget.mealPlan['targetCalories'].toString());
     _selectedDate = DateTime.parse(widget.mealPlan['date']);
-    
+
+    // Parse food items from JSON and update selected food items
     var foodItemsJson = jsonDecode(widget.mealPlan['foodItems']);
     if (foodItemsJson is List) {
       _selectedFoodItems = List<Map<String, dynamic>>.from(foodItemsJson.map((item) => Map<String, dynamic>.from(item)));
     }
 
-    _loadAvailableFoodItems();
+    _loadAvailableFoodItems(); // Load available food items
   }
 
+  // Fetch available food items from the database
   Future<void> _loadAvailableFoodItems() async {
     var fetchedData = await _databaseHelper.getFoodCalories();
     setState(() {
+      // Update available food items and set 'isSelected' based on already selected items
       _availableFoodItems = fetchedData.map((item) => {
         ...item,
         'isSelected': _selectedFoodItems.any((selectedItem) => selectedItem['id'] == item['id']),
@@ -43,6 +49,7 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
     });
   }
 
+  // Method to select a date using date picker
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -52,24 +59,26 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = picked; // Update selected date
       });
     }
   }
 
+  // Calculate remaining calories based on target and selected food items
   int get _remainingCalories {
     int targetCalories = int.tryParse(_targetCaloriesController.text) ?? 0;
     int currentCalories = _selectedFoodItems.fold(0, (sum, el) => sum + (el['calories'] as int));
-    return targetCalories - currentCalories;
+    return targetCalories - currentCalories; // Calculate remaining calories
   }
 
+  // Toggle selection of a food item
   void _toggleFoodItem(Map<String, dynamic> item) {
     setState(() {
-      item['isSelected'] = !item['isSelected'];
+      item['isSelected'] = !item['isSelected']; // Toggle selected state
       if (item['isSelected']) {
-        _selectedFoodItems.add(item);
+        _selectedFoodItems.add(item); // Add selected item
       } else {
-        _selectedFoodItems.removeWhere((el) => el['id'] == item['id']);
+        _selectedFoodItems.removeWhere((el) => el['id'] == item['id']); // Remove deselected item
       }
     });
   }
@@ -90,7 +99,7 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
                 labelText: 'Target Calories',
               ),
               keyboardType: TextInputType.number,
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => setState(() {}), // Update UI on target calories change
             ),
             const SizedBox(height: 20),
             Row(
@@ -116,7 +125,7 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
                     title: Text(foodItem['food']),
                     subtitle: Text('${foodItem['calories']} calories'),
                     onChanged: (bool? value) {
-                      _toggleFoodItem(foodItem);
+                      _toggleFoodItem(foodItem); // Toggle food item selection
                     },
                   );
                 },
@@ -126,16 +135,17 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _saveUpdatedMealPlan,
+        onPressed: _saveUpdatedMealPlan, // Save updated meal plan on button press
         child: const Icon(Icons.save),
       ),
     );
   }
 
+  // Save updated meal plan to the database
   void _saveUpdatedMealPlan() async {
     int remainingCalories = _remainingCalories;
     if (remainingCalories >= 0) {
-      String foodItemsJson = jsonEncode(_selectedFoodItems);
+      String foodItemsJson = jsonEncode(_selectedFoodItems); // Convert selected items to JSON
       await _databaseHelper.updateMealPlan(
         widget.mealPlan['id'],
         _selectedDate,
@@ -144,6 +154,7 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
       );
       Navigator.pop(context); // Go back after saving
     } else {
+      // Show a snack bar if remaining calories are negative
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please adjust your meal plan.")),
       );
@@ -152,7 +163,7 @@ class _UpdateMealPlanPageState extends State<UpdateMealPlanPage> {
 
   @override
   void dispose() {
-    _targetCaloriesController.dispose();
+    _targetCaloriesController.dispose(); // Dispose of controller on widget disposal
     super.dispose();
   }
 }

@@ -1,12 +1,14 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+// Class to handle database operations
 class DatabaseHelper {
   static Database? _database;
   static const String dbName = 'food_calories.db';
   static const String tableFoodCalories = 'food_calories';
   static const String tableMealPlans = 'meal_plans';
 
+  // Getting the database instance
   Future<Database> get database async {
     if (_database != null) return _database!;
 
@@ -14,6 +16,7 @@ class DatabaseHelper {
     return _database!;
   }
 
+  // Initializing the database
   Future<Database> initDatabase() async {
     String path = join(await getDatabasesPath(), dbName);
     return await openDatabase(
@@ -24,6 +27,7 @@ class DatabaseHelper {
     );
   }
 
+  // Creating tables and preset data on initial creation
   Future _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $tableFoodCalories (
@@ -70,6 +74,7 @@ class DatabaseHelper {
     ''');
   }
 
+  // Upgrading the database if necessary
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''
@@ -83,11 +88,13 @@ class DatabaseHelper {
     }
   }
 
+  // Fetching food items with their calories from the database
   Future<List<Map<String, dynamic>>> getFoodCalories() async {
     final db = await database;
     return await db.query(tableFoodCalories);
   }
 
+  // Adding a new food item with its calories to the database
   Future<void> addFoodCaloriePair(String food, int calories) async {
     final db = await database;
     await db.insert(
@@ -97,6 +104,7 @@ class DatabaseHelper {
     );
   }
 
+  // Updating a food item's details in the database
   Future<void> updateFoodCaloriePair(int id, String food, int calories) async {
     final db = await database;
     await db.update(
@@ -107,6 +115,7 @@ class DatabaseHelper {
     );
   }
 
+  // Deleting a food item from the database
   Future<void> deleteFoodPair(int id) async {
     final db = await database;
     await db.delete(
@@ -116,6 +125,7 @@ class DatabaseHelper {
     );
   }
 
+  // Adding a new meal plan to the database
   Future<void> addMealPlan(DateTime date, int targetCalories, String foodItemsJson) async {
     final db = await database;
     await db.insert(
@@ -129,11 +139,13 @@ class DatabaseHelper {
     );
   }
 
+  // Fetching all meal plans from the database
   Future<List<Map<String, dynamic>>> getMealPlans() async {
     final db = await database;
     return await db.query(tableMealPlans);
   }
 
+  // Deleting a meal plan from the database
   Future<void> deleteMealPlan(int id) async {
     final db = await database;
     await db.delete(
@@ -143,6 +155,7 @@ class DatabaseHelper {
     );
   }
 
+  // Updating a meal plan in the database
   Future<void> updateMealPlan(int id, DateTime date, int targetCalories, String foodItemsJson) async {
     final db = await database;
     await db.update(
@@ -157,6 +170,7 @@ class DatabaseHelper {
     );
   }
 
+  // Printing database contents for debugging
   Future<void> debugPrintDatabaseContents() async {
     final db = await database;
     final resultFoodCalories = await db.query(tableFoodCalories);
@@ -165,17 +179,18 @@ class DatabaseHelper {
     print('Meal Plans Table: $resultMealPlans');
   }
 
+  // Clearing the database
   Future<void> clearDatabase() async {
     final db = await database;
     await db.delete(tableFoodCalories);
     await db.delete(tableMealPlans);
   }
 
+  // Resetting and initializing the database
   void resetAndInitializeDatabase() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.clearDatabase();
     await dbHelper.initDatabase();
     print('Database reset and initialized.');
   }
-
 }

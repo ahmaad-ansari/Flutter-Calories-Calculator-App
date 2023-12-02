@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-
 import 'database_helper.dart';
 
+// StatefulWidget to display food calorie pairs
 class FoodCaloriePairPage extends StatefulWidget {
-  const FoodCaloriePairPage({super.key});
+  const FoodCaloriePairPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _FoodCaloriePairPageState createState() => _FoodCaloriePairPageState();
 }
 
+// State class for displaying food calorie pairs
 class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
   DatabaseHelper databaseHelper = DatabaseHelper();
-  late List<Map<String, dynamic>> foodCaloriePairs = []; // Initialize to an empty list
+  late List<Map<String, dynamic>> foodCaloriePairs = [];
 
   @override
   void initState() {
@@ -20,6 +20,7 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
     _loadFoodCaloriePairs();
   }
 
+  // Loading food calorie pairs from the database
   Future<void> _loadFoodCaloriePairs() async {
     List<Map<String, dynamic>> fetchedData = await databaseHelper.getFoodCalories();
     setState(() {
@@ -27,8 +28,10 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
     });
   }
 
+  // Building the UI to display food calorie pairs
   @override
   Widget build(BuildContext context) {
+    // Scaffold with an app bar, list view of food items, and a floating action button
     return Scaffold(
       appBar: AppBar(
         title: const Text('Food Calories'),
@@ -38,6 +41,7 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
         itemBuilder: (context, index) {
           final foodItem = foodCaloriePairs[index];
           return ListTile(
+            // Displaying food item and calories, adding delete functionality
             title: Text(foodItem['food']),
             subtitle: Text('${foodItem['calories']} calories'),
             trailing: IconButton(
@@ -52,6 +56,7 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
           );
         },
       ),
+      // Floating action button to navigate to the add food page
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _navigateToAddFoodPage(); // Navigate to the add food page
@@ -61,22 +66,17 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
     );
   }
 
-  // Implement this method to delete a food pair from the database
+  // Function to delete a food pair from the database
   void _deleteFoodPair(int id) async {
-    // Implement delete functionality using databaseHelper
-    // After deletion, reload the food calorie pairs
     await databaseHelper.deleteFoodPair(id);
     await _loadFoodCaloriePairs();
   }
 
-  // Implement this method to navigate to the update food page
+  // Methods to navigate to update food page and add food page
   void _navigateToUpdateFoodPage(Map<String, dynamic> foodItem) {
-    // Implement navigation to update food page using foodItem data
-    // This can navigate to a new screen to edit the item
-    // For simplicity, it's left empty in this example
+    // Navigation to update food page (left empty for simplicity)
   }
 
-  // Implement this method to navigate to the add food page
   void _navigateToAddFoodPage() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -88,14 +88,15 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
   }
 }
 
+// StatefulWidget to add a new food item
 class AddFoodPage extends StatefulWidget {
-  const AddFoodPage({super.key});
+  const AddFoodPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _AddFoodPageState createState() => _AddFoodPageState();
 }
 
+// State class to handle adding a new food item
 class _AddFoodPageState extends State<AddFoodPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _foodNameController = TextEditingController();
@@ -103,6 +104,7 @@ class _AddFoodPageState extends State<AddFoodPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Scaffold to add a new food item with form fields for food name and calories
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Food'),
@@ -114,6 +116,7 @@ class _AddFoodPageState extends State<AddFoodPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // TextFormFields for entering food name and calories
               TextFormField(
                 controller: _foodNameController,
                 decoration: const InputDecoration(
@@ -144,6 +147,7 @@ class _AddFoodPageState extends State<AddFoodPage> {
                 },
               ),
               const SizedBox(height: 20),
+              // Button to save the new food item
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {
@@ -159,6 +163,7 @@ class _AddFoodPageState extends State<AddFoodPage> {
     );
   }
 
+  // Function to save the new food item to the database
   void _saveFoodItem() async {
     String? foodName = _foodNameController.text;
     int? calories = int.tryParse(_caloriesController.text);
@@ -167,13 +172,11 @@ class _AddFoodPageState extends State<AddFoodPage> {
       DatabaseHelper databaseHelper = DatabaseHelper();
       await databaseHelper.addFoodCaloriePair(foodName, calories);
 
-      // Navigate back after saving
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context);
+      Navigator.pop(context); // Navigate back after saving
     }
   }
 
-
+  // Dispose method to clean up controllers
   @override
   void dispose() {
     _foodNameController.dispose();
