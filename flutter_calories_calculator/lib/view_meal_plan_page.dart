@@ -4,22 +4,23 @@ import 'update_meal_plan_page.dart';
 import 'database_helper.dart';
 
 class ViewMealPlanPage extends StatefulWidget {
-  const ViewMealPlanPage({super.key});
+  const ViewMealPlanPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _ViewMealPlanPageState createState() => _ViewMealPlanPageState();
 }
 
 class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   late List<Map<String, dynamic>> _mealPlans;
+  late TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    _mealPlans = []; // Initialize _mealPlans in initState
+    _mealPlans = [];
     _loadMealPlans();
+    _searchController = TextEditingController();
   }
 
   Future<void> _loadMealPlans() async {
@@ -40,16 +41,37 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
         builder: (context) => UpdateMealPlanPage(mealPlan: mealPlan),
       ),
     ).then((_) {
-      _loadMealPlans(); // Refresh the list after updating
+      _loadMealPlans();
     });
   }
 
+  void _filterByDate(String query) {
+    List<Map<String, dynamic>> filteredPlans = _mealPlans.where((plan) {
+      String formattedDate = plan['date'] != null ? DateTime.parse(plan['date']).toString().split(' ')[0] : '';
+      return formattedDate.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      _mealPlans = filteredPlans;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('View Meal Plans'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: MealPlanSearch(_mealPlans, _filterByDate),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: _mealPlans.length,
@@ -104,4 +126,89 @@ class _ViewMealPlanPageState extends State<ViewMealPlanPage> {
       ),
     );
   }
+}
+
+class MealPlanSearch extends SearchDelegate<String> {
+  final List<Map<String, dynamic>> mealPlans;
+  final Function(String) filterCallback;
+
+  MealPlanSearch(this.mealPlans, this.filterCallback);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return Container(); // Implement if needed
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final List<Map<String, dynamic>> suggestions = query.isEmpty
+        ? mealPlans // Show all meal plans initially if the query is empty
+        : mealPlans.where((plan) {
+            String formattedDate =
+                plan['date'] != null ? DateTime.parse(plan['date']).toString().split(' ')[0] : '';
+            return formattedDate.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        final mealPlan = suggestions[index];
+        final foodItems = jsonDecode(mealPlan['foodItems']) as List;
+
+        String formattedDate =
+            mealPlan['date'] != null ? DateTime.parse(mealPlan['date']).toString().split(' ')[0] : '';
+
+        return ListTile(
+          title: Text('Meal Plan for $formattedDate'),
+          subtitle: Text('Total Calories: ${mealPlan['targetCalories']}'),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Food Items on $formattedDate'),
+                  content: SingleChildScrollView(
+                    child: ListBody(
+                      children: foodItems.map<Widget>((item) => Text(item['food'])).toList(),
+                    ),
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Close'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
 }
