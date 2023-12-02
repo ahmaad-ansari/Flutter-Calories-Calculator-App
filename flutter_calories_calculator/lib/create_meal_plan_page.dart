@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_calories_calculator/view_meal_plan_page.dart';
 import 'database_helper.dart';
 import 'package:intl/intl.dart';
 
@@ -123,13 +124,16 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
                 },
               ),
             ),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: _clearSelection,
               child: const Text('Clear Selection'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _saveMealPlan,
+              onPressed:  () {
+                _saveMealPlan(context);
+              },
               child: const Text('Save Meal Plan'),
             ),
           ],
@@ -138,17 +142,24 @@ class _CreateMealPlanPageState extends State<CreateMealPlanPage> {
     );
   }
 
-  void _saveMealPlan() async {
+  void _saveMealPlan(BuildContext context) async {
     if (_selectedFoodItems.isNotEmpty && _remainingCalories >= 0) {
       String foodItemsJson = jsonEncode(_selectedFoodItems);
       await _databaseHelper.addMealPlan(_selectedDate, int.parse(_targetCaloriesController.text), foodItemsJson);
-      // Navigator.pop(context); // Go back after saving
+      
+      // Navigate to another page
+      // ignore: use_build_context_synchronously
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ViewMealPlanPage()),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please adjust your meal plan.")),
       );
     }
   }
+
 
   @override
   void dispose() {

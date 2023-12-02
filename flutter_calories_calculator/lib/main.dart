@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_calories_calculator/database_helper.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'create_meal_plan_page.dart';
 import 'food_calorie_pair_page.dart';
@@ -6,7 +7,7 @@ import 'view_meal_plan_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
 
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize sqflite for desktop platforms
@@ -14,7 +15,6 @@ void main() {
   
   // Set the database factory to FFI
   databaseFactory = databaseFactoryFfi;
-
   runApp(const CalorieCalculatorApp());
 }
 

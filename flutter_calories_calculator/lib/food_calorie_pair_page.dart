@@ -18,8 +18,6 @@ class _FoodCaloriePairPageState extends State<FoodCaloriePairPage> {
   void initState() {
     super.initState();
     _loadFoodCaloriePairs();
-    databaseHelper.resetAndInitializeDatabase();
-    // databaseHelper.debugPrintDatabaseContents();
   }
 
   Future<void> _loadFoodCaloriePairs() async {
