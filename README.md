@@ -2,7 +2,7 @@
 
 ## Overview
 
-FlutterCaloriesCalculator is a mobile application developed using Flutter and Dart. The app allows users to manage their daily calorie intake by selecting food items and planning their meals.
+Flutter Calories Calculator is a mobile application developed using Flutter and Dart. The app allows users to manage their daily calorie intake by selecting food items and planning their meals.
 
 ## Features
 
