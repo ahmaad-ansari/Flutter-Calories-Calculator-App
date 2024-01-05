@@ -1,4 +1,4 @@
-# FlutterCaloriesCalculator App
+# Flutter Calories Calculator App
 
 ## Overview
 
